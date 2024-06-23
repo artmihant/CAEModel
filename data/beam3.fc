@@ -1,0 +1,70 @@
+{
+   "blocks" : 
+   [
+      {
+         "cs_id" : 1,
+         "id" : 1,
+         "material_id" : 0,
+         "property_id" : 1
+      }
+   ],
+   "coordinate_systems" : 
+   [
+      {
+         "dir1" : "AAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAA",
+         "dir2" : "AAAAAAAAAAAAAAAAAADwPwAAAAAAAAAA",
+         "id" : 1,
+         "name" : "\u0413\u043b\u043e\u0431\u0430\u043b\u044c\u043d\u0430\u044f \u0434\u0435\u043a\u0430\u0440\u0442\u043e\u0432\u0430",
+         "origin" : "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+         "type" : "cartesian"
+      }
+   ],
+   "header" : 
+   {
+      "binary" : true,
+      "description" : "Fidesys Case Format",
+      "types" : 
+      {
+         "char" : 1,
+         "double" : 8,
+         "int" : 4,
+         "short_int" : 2
+      },
+      "version" : 3
+   },
+   "mesh" : 
+   {
+      "elem_blocks" : "AQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAA==",
+      "elem_orders" : "AgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAAA==",
+      "elem_parent_ids" : "AQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAA==",
+      "elem_types" : "WlpaWlpaWlpaWg==",
+      "elemids" : "AQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAA==",
+      "elems" : "AQAAAAMAAAAMAAAAAwAAAAQAAAANAAAABAAAAAUAAAAOAAAABQAAAAYAAAAPAAAABgAAAAcAAAAQAAAABwAAAAgAAAARAAAACAAAAAkAAAASAAAACQAAAAoAAAATAAAACgAAAAsAAAAUAAAACwAAAAIAAAAVAAAA",
+      "elems_count" : 10,
+      "nids" : "AQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAAsAAAAMAAAADQAAAA4AAAAPAAAAEAAAABEAAAASAAAAEwAAABQAAAAVAAAA",
+      "nodes" : "AAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA8L8AAAAAAAAAAAAAAAAAAAAAmpmZmZmZ6T8AAAAAAAAAAAAAAAAAAAAANDMzMzMz4z8AAAAAAAAAAAAAAAAAAAAAnJmZmZmZ2T8AAAAAAAAAAAAAAAAAAAAAoJmZmZmZyT8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAsDwAAAAAAAAAAAAAAAAAAAAAkJmZmZmZyb8AAAAAAAAAAAAAAAAAAAAAlJmZmZmZ2b8AAAAAAAAAAAAAAAAAAAAAMDMzMzMz478AAAAAAAAAAAAAAAAAAAAAlpmZmZmZ6b8AAAAAAAAAAAAAAAAAAAAAzczMzMzM7D8AAAAAAAAAAAAAAAAAAAAAZ2ZmZmZm5j8AAAAAAAAAAAAAAAAAAAAAAQAAAAAA4D8AAAAAAAAAAAAAAAAAAAAANjMzMzMz0z8AAAAAAAAAAAAAAAAAAAAAqJmZmZmZuT8AAAAAAAAAAAAAAAAAAAAAgJmZmZmZub8AAAAAAAAAAAAAAAAAAAAAMDMzMzMz078AAAAAAAAAAAAAAAAAAAAA+P//////378AAAAAAAAAAAAAAAAAAAAAZGZmZmZm5r8AAAAAAAAAAAAAAAAAAAAAzMzMzMzM7L8AAAAAAAAAAAAAAAAAAAAA",
+      "nodes_count" : 21
+   },
+   "settings" : 
+   {
+      "bc_tolerance" : 0.00050000000000000001,
+      "environment" : 
+      {
+         "temperature" : 0.0
+      },
+      "output" : 
+      {
+         "energy" : false,
+         "full_periodic" : false,
+         "intermediate_results" : true,
+         "log" : true,
+         "material" : false,
+         "normal_force" : false,
+         "record3d" : false,
+         "trackingForce" : false,
+         "vtu" : true,
+         "without_smoothing" : false
+      },
+      "permission_write" : true
+   }
+}

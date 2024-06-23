@@ -219,15 +219,12 @@ class FCModel:
 
         self._decode_header(src_data)
         self._decode_blocks(src_data)
-        self._decode_contact_constrains(src_data)
         self._decode_coordinate_systems(src_data)
         self._decode_mesh(src_data)
         self._decode_settings(src_data)
         self._decode_materials(src_data)
         self._decode_restraints(src_data)
         self._decode_loads(src_data)
-        # self._decode_nodesets(src_data)
-        # self._decode_sidesets(src_data)
         self._decode_receivers(src_data)
 
     def write(self, filepath):
@@ -237,14 +234,11 @@ class FCModel:
         self._encode_header(src_data)
         self._encode_blocks(src_data)
         self._encode_coordinate_systems(src_data)
-        self._encode_contact_constrains(src_data)
         self._encode_mesh(src_data)
         self._encode_settings(src_data)
         self._encode_materials(src_data)
         self._encode_restraints(src_data)
         self._encode_loads(src_data)
-        # self._encode_nodesets(src_data)
-        # self._encode_sidesets(src_data)
         self._encode_receivers(src_data)
 
         with open(filepath, "w") as f:
@@ -272,13 +266,6 @@ class FCModel:
 
     def _encode_blocks(self, data):
         data['blocks'] = self.blocks
-
-
-    def _decode_contact_constrains(self, data):
-        pass
-
-    def _encode_contact_constrains(self, data):
-        pass
 
 
     def _decode_coordinate_systems(self, data):
@@ -506,7 +493,7 @@ class FCModel:
             "id" : cs['id'],
             "name": cs['name'],
             "type": cs['type']
-        } for cs in self.restraints ]
+        } for cs in self.restraints]
 
 
     # def _decode_nodesets(self, data):

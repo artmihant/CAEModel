@@ -12,7 +12,7 @@ setup(
   description='Read & Write parser for FC (fidesys calc) and VTU (VTK unstructed grid) file types',
   long_description=readme(),
   long_description_content_type='text/markdown',
-  url='https://github.com/artmihant/CAEmodel',
+  url='https://github.com/artmihant/CAEModel',
   packages=find_packages(),
   classifiers=[
         "Programming Language :: Python :: 3",
@@ -21,6 +21,6 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers"
   ],
-  keywords='example python',
+  package_dir = {"": "src"},
   python_requires='>=3.7'
 )
