@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: cae_model
+Version: 0.0.2
+Summary: Read & Write parser for FC (fidesys calc) and VTU (VTK unstructed grid) file types
+Home-page: https://github.com/artmihant/CAEModel
+Author: Artem Antonov
+Author-email: artmihant@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# CAE Model
+Библиотека для чтения и записи файлов форматов fc (fidesys calc) и vtu (VTU unstructed).

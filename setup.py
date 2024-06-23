@@ -6,7 +6,7 @@ def readme():
 
 setup(
   name='cae_model',
-  version='0.0.1',
+  version='0.0.2',
   author='Artem Antonov',
   author_email='artmihant@gmail.com',
   description='Read & Write parser for FC (fidesys calc) and VTU (VTK unstructed grid) file types',
