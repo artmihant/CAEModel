@@ -4,7 +4,7 @@ from typing import Callable, Optional, TypeVar, TypedDict
 import numpy as np
 from .element_types import ELEMENT_TYPES
 
-from numpy import ndarray, dtype, int8, int32, float64
+from numpy import ndarray, dtype, int8, int32, int64, float64
 
 D = TypeVar('D', bound=dtype)
 
@@ -116,7 +116,7 @@ class FCLoadAxis(TypedDict):
 
 
 class FCLoad(TypedDict):
-    apply_to: ndarray[int, dtype[int32]] | str
+    apply_to: ndarray[int, dtype[int64]] | str
     cs: Optional[int]
     name: str
     type: int
@@ -131,7 +131,7 @@ class FCRestrainAxis(TypedDict):
 
 
 class FCRestraint(TypedDict):
-    apply_to: ndarray[int, dtype[int32]] | str
+    apply_to: ndarray[int, dtype[int64]] | str
     cs: Optional[int]
     name: str
     id: int
@@ -139,7 +139,7 @@ class FCRestraint(TypedDict):
 
 
 class FCNodeset(TypedDict):
-    apply_to: ndarray[int, dtype[int32]] | str
+    apply_to: ndarray[int, dtype[int64]] | str
     id: int
     name: str
 
@@ -150,6 +150,10 @@ class FCSideset(TypedDict):
 
 class FCReciver(TypedDict):
     apply_to: ndarray[int, dtype[int32]] | str
+    dofs: list
+    id: int
+    name: str
+    type: str
 
 
 def decode_dependency(deps_types: list | int, dep_data) -> list[FCDependency] | int :
@@ -228,7 +232,7 @@ class FCModel:
         self._decode_materials(src_data)
         self._decode_restraints(src_data)
         self._decode_loads(src_data)
-        # self._decode_receivers(src_data)
+        self._decode_receivers(src_data)
 
     def write(self, filepath):
 
@@ -241,8 +245,8 @@ class FCModel:
         self._encode_settings(src_data)
         self._encode_materials(src_data)
         self._encode_restraints(src_data)
-        # self._encode_loads(src_data)
-        # self._encode_receivers(src_data)
+        self._encode_loads(src_data)
+        self._encode_receivers(src_data)
 
         with open(filepath, "w") as f:
             json.dump(src_data, f, indent=4)
@@ -324,6 +328,8 @@ class FCModel:
             element_raw = nodes_list[counter:(counter+count)]
             self.mesh['elems']['nodes'].append(element_raw)
             counter += count
+        
+        pass
 
 
     def _encode_mesh(self, data):
@@ -341,6 +347,7 @@ class FCModel:
             "nodes": encode(mesh['nodes']['coord']),
             "nodes_count": len(mesh['nodes']['id']),
         }
+
 
     def _decode_settings(self, data):
         self.settings = data.get('settings')
@@ -407,12 +414,16 @@ class FCModel:
                     
                     material_src[property_name].append({
                         "const_dep": [const_dep],
-                        "const_dep_size": [len(const_dep)],
+                        "const_dep_size": [len(material_property["data"])],
                         "const_names": [material_property["name"]],
                         "const_types": [const_types],
                         "constants": [fencode(material_property["data"])],
                         "type": material_property["type"]
                     })
+        
+            data['materials'].append(material_src)
+
+        pass
 
 
     def _decode_restraints(self, data):
@@ -435,11 +446,14 @@ class FCModel:
                     "flag": restraint_src['flag'][i],
                 })
 
+            apply_to = fdecode(restraint_src['apply_to'], dtype('int64'))
+            assert len(apply_to) == restraint_src['apply_to_size']
+
             self.restraints.append({
                 "id": restraint_src['id'],
                 "name": restraint_src['name'],
                 "cs": restraint_src.get('cs', 0),
-                "apply_to": fdecode(restraint_src['apply_to']),
+                "apply_to": apply_to,
                 "axes": axes
             })
 
@@ -492,11 +506,15 @@ class FCModel:
                         "dependency": decode_dependency(load_src["dependency_type"][i], dep_var_num),
                     })
 
+            apply_to = fdecode(load_src['apply_to'], dtype('int64'))
+
+            assert len(apply_to) == load_src['apply_to_size']
+
             self.loads.append({
                 "id": load_src['id'],
                 "name": load_src['name'],
                 "cs": load_src['cs'] if 'cs' in load_src else 0,
-                "apply_to": fdecode(load_src['apply_to']),
+                "apply_to": apply_to,
                 "axes": axes,
                 "type": load_src['type'],
             })
@@ -541,133 +559,146 @@ class FCModel:
     # def _encode_nodesets(self, data):
     #     pass
 
-
-    # def _decode_sidesets(self, data):
-    #     self.receivers = [{
-    #         'apply_to': fdecode(cs['apply_to']),
-    #         'dofs': cs['dofs'],
-    #         "id" : cs['id'],
-    #         "name": cs['name'],
-    #         "type": cs['type']
-    #     } for cs in data.get('receivers',[]) ]
-
-
     # def _encode_sidesets(self, data):
     #     pass
 
 
-    # def _decode_receivers(self, data):
+    def _decode_receivers(self, data):
 
-    #     self.receivers = [{
-    #         'apply_to': fdecode(cs['apply_to']),
-    #         'dofs': cs['dofs'],
-    #         "id" : cs['id'],
-    #         "name": cs['name'],
-    #         "type": cs['type']
-    #     } for cs in data.get('receivers',[]) ]
-
-
-    # def _encode_receivers(self, data):
-
-    #     data['receivers'] = [{
-    #         'apply_to': fencode(cs['apply_to']),
-    #         'apply_to_size': cs['apply_to_size'],
-    #         'dofs': cs['dofs'],
-    #         "id" : cs['id'],
-    #         "name": cs['name'],
-    #         "type": cs['type']
-    #     } for cs in self.receivers ]
+        self.receivers = [{
+            'apply_to': fdecode(cs['apply_to']),
+            'dofs': cs['dofs'],
+            "id" : cs['id'],
+            "name": cs['name'],
+            "type": cs['type']
+        } for cs in data.get('receivers',[]) ]
 
 
+    def _encode_receivers(self, data):
 
-    # def cut(self, cut_function: Callable):
-
-    #     nodes_mask = [cut_function(el) for el in self.mesh['nodes']['coord']]
-
-    #     self.mesh['nodes']['coord'] = self.mesh['nodes']['coord'][nodes_mask]
-    #     self.mesh['nodes']['id'] = self.mesh['nodes']['id'][nodes_mask]
-    #     self.mesh['nodes']['count'] = len(self.mesh['nodes']['id'])
-
-    #     elems_mask = []
-
-    #     node_set = set(self.mesh['nodes']['id'])
-
-    #     for i in range(self.mesh['elems']['count']):
-
-    #         mask_append = True
-
-    #         for node in self.mesh['elems']['nodes'][i]:
-    #             if node not in node_set:
-    #                 mask_append = False
-    #                 break
-
-    #         if mask_append:
-    #             elems_mask.append(i)
-
-
-    #     self.mesh['elems']['block'] = self.mesh['elems']['block'][elems_mask]
-    #     self.mesh['elems']['order'] = self.mesh['elems']['order'][elems_mask]
-    #     self.mesh['elems']['parent_id'] = self.mesh['elems']['parent_id'][elems_mask]
-    #     self.mesh['elems']['type'] = self.mesh['elems']['type'][elems_mask]
-    #     self.mesh['elems']['id'] = self.mesh['elems']['id'][elems_mask]
-    #     self.mesh['elems']['nodes'] = [self.mesh['elems']['nodes'][i] for i in elems_mask]
-    #     self.mesh['elems']['count'] = len(self.mesh['elems']['id'])
-
-    #     for material in self.materials:
-    #         for key in material['properties']:
-    #             for property in material['properties'][key]:
-    #                 if property['const_types'] == 10:
-
-    #                     mat_mask = np.in1d(property['const_dep'], self.mesh['elems']['id'], assume_unique=True)
-
-    #                     property['const_dep'] = property['const_dep'][mat_mask]
-    #                     property['constants'] = property['constants'][mat_mask]
-    #                     property['const_dep_size'] = len(property['const_dep'])
-
-    #                 if property['const_types'] == 11:
-
-    #                     mat_mask = np.in1d(property['const_dep'], self.mesh['nodes']['id'], assume_unique=True)
-
-    #                     property['const_dep'] = property['const_dep'][mat_mask]
-    #                     property['constants'] = property['constants'][mat_mask]
-    #                     property['const_dep_size'] = len(property['const_dep'])
+        data['receivers'] = [{
+            'apply_to': fencode(cs['apply_to']),
+            'apply_to_size': len(cs['apply_to']),
+            'dofs': cs['dofs'],
+            "id" : cs['id'],
+            "name": cs['name'],
+            "type": cs['type']
+        } for cs in self.receivers ]
 
 
 
-    # def stream_fragments(self, dim, rank, offset=0):
+    def cut(self, cut_function: Callable):
 
-    #     fragments = []
+        nodes_mask = [cut_function(el) for el in self.mesh['nodes']['coord']]
 
-    #     title = None
+        self.mesh['nodes']['coord'] = self.mesh['nodes']['coord'][nodes_mask]
+        self.mesh['nodes']['id'] = self.mesh['nodes']['id'][nodes_mask]
 
-    #     for i in range(self.mesh['elems']['count']):
+        elems_mask = []
 
-    #         element_type_id = self.mesh['elems']['type'][i]
-    #         element_nodes = self.mesh['elems']['nodes'][i]
+        node_set = set(self.mesh['nodes']['id'])
 
-    #         element_type = FC_ELEMENT_TYPES[element_type_id]
+        for i in range(len(self.mesh['elems']['id'])):
 
-    #         if dim < element_type['site'] or element_type['site'] < rank:
-    #             continue;
+            mask_append = True
+            nodes = self.mesh['elems']['nodes'][i]
+            for node in nodes:
+                if node not in node_set:
+                    mask_append = False
+                    break
 
-    #         element_structure = element_type['structure'][rank]
+            elems_mask.append(mask_append)
 
-    #         element_nodes[element_structure]
 
-    #         element_parts = element_nodes[element_structure].reshape((-1,rank+1))
+        self.mesh['elems']['block'] = self.mesh['elems']['block'][elems_mask]
+        self.mesh['elems']['order'] = self.mesh['elems']['order'][elems_mask]
+        self.mesh['elems']['parent_id'] = self.mesh['elems']['parent_id'][elems_mask]
+        self.mesh['elems']['type'] = self.mesh['elems']['type'][elems_mask]
+        self.mesh['elems']['id'] = self.mesh['elems']['id'][elems_mask]
+        self.mesh['elems']['nodes'] = [nodes for i, nodes in enumerate(self.mesh['elems']['nodes']) if elems_mask[i]]
 
-    #         if title and title[1] == self.mesh['elems']['block'][i] and title[2] == element_type['site']:
-    #             title[4] += len(element_parts)
-    #         else:
-    #             title = [dim, self.mesh['elems']['block'][i]+offset, element_type['site'], rank, len(element_parts)]
 
-    #             fragments.append(title)
+        for material in self.materials:
+            for key in material['properties']:
+                for property in material['properties'][key]:
 
-    #         fragments.extend(element_parts)
-    #         pass
+                    if isinstance(property['dependency'], list) and property['dependency']:
+                        for dep in property['dependency']:
+                            if dep['type'] == 10:
+                                mat_mask = np.in1d(dep['data'], self.mesh['elems']['id'], assume_unique=True)
+                                dep['data'] = dep['data'][mat_mask]
+                                property['data'] = property['data'][mat_mask]
+                            if dep['type'] == 11:
+                                mat_mask = np.in1d(dep['data'], self.mesh['nodes']['id'], assume_unique=True)
+                                dep['data'] = dep['data'][mat_mask]
+                                property['data'] = property['data'][mat_mask]
 
-    #     stream = []
-    #     for a in fragments:
-    #         stream.extend(a)
 
-    #     return stream
+    def compress(self):
+        nodes_id_map = {(index):i+1 for i, index in enumerate(self.mesh['nodes']['id'])}
+        elems_id_map = {(index):i+1 for i, index in enumerate(self.mesh['elems']['id'])}
+
+        nodes_count = len(self.mesh['nodes']['id'])
+        elems_count = len(self.mesh['elems']['id'])
+
+        self.mesh['nodes']['id'] = np.arange(nodes_count, dtype=np.int32)+1
+        self.mesh['elems']['id'] = np.arange(elems_count, dtype=np.int32)+1
+
+        for node in self.mesh['elems']['nodes']:
+            for i, n in enumerate(node):
+                node[i] = nodes_id_map[n]
+
+
+        for material in self.materials:
+            for key in material['properties']:
+                for property in material['properties'][key]:
+
+                    if isinstance(property['dependency'], list) and property['dependency']:
+                        for dep in property['dependency']:
+                            if isinstance(dep['data'], ndarray):
+                                if dep['type'] == 10:
+                                    for i, n in enumerate(dep['data']):
+                                        dep['data'][i] = elems_id_map[int(n)]
+                                if dep['type'] == 11:
+                                    for i, n in enumerate(dep['data']):
+                                        dep['data'][i] = nodes_id_map[int(n)]
+                        
+
+
+    def stream_fragments(self, dim, rank, offset=0):
+
+        fragments = []
+
+        title = None
+
+        for i in range(len(self.mesh['elems']['id'])):
+
+            element_type_id = self.mesh['elems']['type'][i]
+            element_nodes = self.mesh['elems']['nodes'][i]
+
+            element_type = FC_ELEMENT_TYPES[element_type_id]
+
+            if dim < element_type['site'] or element_type['site'] < rank:
+                continue;
+
+            element_structure = element_type['structure'][rank]
+
+            element_nodes[element_structure]
+
+            element_parts = element_nodes[element_structure].reshape((-1,rank+1))
+
+            if title and title[1] == self.mesh['elems']['block'][i] and title[2] == element_type['site']:
+                title[4] += len(element_parts)
+            else:
+                title = [dim, self.mesh['elems']['block'][i]+offset, element_type['site'], rank, len(element_parts)]
+
+                fragments.append(title)
+
+            fragments.extend(element_parts)
+            pass
+
+        stream = []
+        for a in fragments:
+            stream.extend(a)
+
+        return stream
