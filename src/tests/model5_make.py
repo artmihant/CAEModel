@@ -1,6 +1,6 @@
 import numpy as np
 from src.cae_model.fc import FCModel
-
+from scipy.spatial import KDTree
 
 def local_coords_2D(ax,ay, bx,by, cx,cy, px,py):
     p = np.linalg.det([
@@ -32,12 +32,12 @@ def local_coords_2D(ax,ay, bx,by, cx,cy, px,py):
             a/p, b/p, c/p
         ]
     else:
-        print(p)
+        # print(p)
         p = np.linalg.det([
             [ax,1],
             [bx,1],
         ])
-        print(p)
+        # print(p)
         if abs(p) > 0:
 
             a = np.linalg.det([
@@ -60,7 +60,7 @@ def local_coords_2D(ax,ay, bx,by, cx,cy, px,py):
 def main():
 
     fc_path_input = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc.fc'
-    fc_path_output = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_2.fc'
+    fc_path_output = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_s5.fc'
     fc_path_top = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_top.fc'
 
     fc_top = FCModel()
@@ -72,63 +72,79 @@ def main():
 
     coord = fc_top.mesh['nodes']['coord']
 
-    coord_z = coord[:,2]
-
     center = [
-        439021.250000,
-        7839164.000000, 
-        0
+        439025.000000,
+        7839165.000000, 
+        -2
     ]
 
-    nodes = []
+    nodes = np.zeros((150*100,3), dtype=np.float64)
 
-    for i in range(0,50):
-        for j in range(0,200):
+    kd_tree_coord = KDTree(coord[:,0:2])
 
-            
+    for i in range(0,150):
+        for j in range(0,100):
 
-            x = center[0]+(j-99.5)*50
-            y = center[1]+(i-24.5)*300
+            x = center[0]+(j-499.5)*10
+            y = center[1]+(i-749.5)*10
 
-            point0 = np.zeros(3)
-            point1 = np.zeros(3)
-            point2 = np.zeros(3)
+            closed = kd_tree_coord.query([x,y], k=3)
 
-            d_point0 = 10000
-            d_point1 = 10000
-            d_point2 = 10000
+            point0 = coord[closed[1][0]]
+            point1 = coord[closed[1][1]]
+            point2 = coord[closed[1][2]]
 
-            k_point0 = 0
-            k_point1 = 0
-            k_point2 = 0
+    # for i in range(0,52):
+    #     for j in range(0,231):
 
-            for k, point in enumerate(coord):
+    #         x = center[0]+(j-115)*50
+    #         y = center[1]+(i-25.5)*300
 
-                delta = (point[0] - x)**2 + (point[1] - y)**2
+    # for i in range(0,315):
+    #     for j in range(0,35):
 
-                if delta < d_point0:
+    #         x = center[0]+(j-17)*300
+    #         y = center[1]+(i-157)*50
 
-                    d_point2, d_point1, d_point0 = d_point1, d_point0, delta
+            # point0 = np.zeros(3)
+            # point1 = np.zeros(3)
+            # point2 = np.zeros(3)
 
-                    point2, point1, point0 = point1, point0, point
+            # d_point0 = 10000
+            # d_point1 = 10000
+            # d_point2 = 10000
 
-                    k_point2, k_point1, k_point0 = k_point1, k_point0,  fc_top.mesh['nodes']['id'][k]
+            # k_point0 = 0
+            # k_point1 = 0
+            # k_point2 = 0
 
-                elif delta < d_point1:
+            # for k, point in enumerate(coord):
 
-                    d_point2, d_point1  = d_point1, delta
+            #     delta = (point[0] - x)**2 + (point[1] - y)**2
 
-                    point2, point1 = point1, point
+            #     if delta < d_point0:
 
-                    k_point2, k_point1 = k_point1, fc_top.mesh['nodes']['id'][k]
+            #         d_point2, d_point1, d_point0 = d_point1, d_point0, delta
 
-                elif delta < d_point2:
+            #         point2, point1, point0 = point1, point0, point
 
-                    d_point2 = delta
+            #         # k_point2, k_point1, k_point0 = k_point1, k_point0,  fc_top.mesh['nodes']['id'][k]
 
-                    point2 = point
+            #     elif delta < d_point1:
 
-                    k_point2 = fc_top.mesh['nodes']['id'][k]
+            #         d_point2, d_point1  = d_point1, delta
+
+            #         point2, point1 = point1, point
+
+            #         # k_point2, k_point1 = k_point1, fc_top.mesh['nodes']['id'][k]
+
+            #     elif delta < d_point2:
+
+            #         d_point2 = delta
+
+            #         point2 = point
+
+            #         # k_point2 = fc_top.mesh['nodes']['id'][k]
 
             l = local_coords_2D(
                 point0[0],point0[1],
@@ -136,22 +152,19 @@ def main():
                 point2[0],point2[1], 
                 x, y
             )
-            if(l[2]==0):
-                print(i,j)
+
 
             z = l[0]*point0[2] + l[1]*point1[2] + l[2]*point2[2] + center[2]
 
-            if l[0] < -0.1 or l[1] < -0.1 or l[2] < -0.1:
-                print('!', l)
-                pass
+            # print(f'"{j}_{i}": [{x}, {y}, {z}],')
 
+            # if j == 2:
+            #     return
 
-            # print(z, k_point0, k_point1, k_point2)
+            nodes[i*100+j,:] = x,y,z
 
-            nodes.append([
-                x,y,z
-            ])
-
+        print(i)
+    # return
 
     node_index = fc.mesh['nodes']['id'].max()
     element_index = fc.mesh['elems']['id'].max()
@@ -190,8 +203,7 @@ def main():
     fc.mesh['elems']['type'] = np.concatenate((fc.mesh['elems']['type'], elems_type), dtype=np.int8)
     fc.mesh['elems']['id'] = np.concatenate((fc.mesh['elems']['id'], elems_id), dtype=np.int32)
     fc.mesh['elems']['nodes'].extend(elems_nodes)
-
-
+    fc.receivers[0]['apply_to'] = np.array(nodes_id, dtype=np.int32)
 
     # # pass
     # # def selector(coord):
