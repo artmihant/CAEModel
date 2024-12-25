@@ -153,7 +153,7 @@ class FCReciver(TypedDict):
     dofs: list
     id: int
     name: str
-    type: str
+    type: int
 
 
 def decode_dependency(deps_types: list | int, dep_data) -> list[FCDependency] | int :
@@ -589,7 +589,7 @@ class FCModel:
 
     def cut(self, cut_function: Callable):
 
-        nodes_mask = [cut_function(el) for el in self.mesh['nodes']['coord']]
+        nodes_mask = [cut_function(i, el) for i, el in enumerate(self.mesh['nodes']['coord'])]
 
         self.mesh['nodes']['coord'] = self.mesh['nodes']['coord'][nodes_mask]
         self.mesh['nodes']['id'] = self.mesh['nodes']['id'][nodes_mask]

@@ -1,5 +1,5 @@
 import numpy as np
-from src.cae_model.fc import FCModel
+from .cae_models.fc import FCModel
 from scipy.spatial import KDTree
 
 def local_coords_2D(ax,ay, bx,by, cx,cy, px,py):
@@ -59,9 +59,11 @@ def local_coords_2D(ax,ay, bx,by, cx,cy, px,py):
 
 def main():
 
-    fc_path_input = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc.fc'
-    fc_path_output = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_s6.fc'
-    fc_path_top = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_top.fc'
+    fc_path_input = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_cut_8_a.fc'
+    fc_path_input2 = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_c8.fc'
+
+    fc_path_output = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_rec_fix_bc_c8.fc'
+    fc_path_top = '/home/artem/Projects/MSU270/SEM3D/data/src/model5_top_0_cut_8.fc'
 
     fc_top = FCModel()
     fc_top.read(fc_path_top)
@@ -69,6 +71,10 @@ def main():
 
     fc = FCModel()
     fc.read(fc_path_input)
+
+    fc2 = FCModel()
+    fc2.read(fc_path_input2)
+
 
     coord = fc_top.mesh['nodes']['coord']
 
@@ -78,7 +84,9 @@ def main():
         -2
     ]
 
-    recievers_area = 400, 1
+    recievers_area = 20, 20
+
+    step = 25, 25
 
     nodes = np.zeros((recievers_area[0]*recievers_area[1],3), dtype=np.float64)
 
@@ -103,12 +111,11 @@ def main():
     #         x = center[0]+(j-199.5)*25
     #         y = center[1]+(i-199.5)*25
 
-    for i in range(recievers_area[1]):
-        for j in range(recievers_area[0]):
+    for j in range(recievers_area[1]):
+        for i in range(recievers_area[0]):
 
-            x = center[0]+(j-199.5)*25
-            y = center[1]
-
+            x = center[0]+(i-(recievers_area[0]-1)/2)*step[0]
+            y = center[1]+(j-(recievers_area[1]-1)/2)*step[1]
 
             closed = kd_tree_coord.query([x,y], k=3)
 
@@ -125,9 +132,9 @@ def main():
 
             z = l[0]*point0[2] + l[1]*point1[2] + l[2]*point2[2] + center[2]
 
-            print(f'"{j}_{i}": [{x}, {y}, {z}],')
+            print(f'"{i}_{j}": [{x}, {y}, {z}],')
 
-            nodes[i*400+j,:] = x,y,z
+            nodes[j*recievers_area[0]+i,:] = x,y,z
 
 
     node_index = fc.mesh['nodes']['id'].max()
@@ -178,7 +185,13 @@ def main():
 
     pass
 
-    fc.receivers[0]['apply_to'] = np.array(nodes_id, dtype=np.int32)
+    fc.receivers = [{
+        'apply_to':np.array(nodes_id, dtype=np.int32),
+        'dofs': [1,1,1],
+        'id': 1,
+        'name': 'PP',
+        'type': 1
+    }]
 
     pass
 
